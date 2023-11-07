@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+
 import {
   CustomerField,
   CustomersTable,
@@ -15,15 +16,15 @@ export async function fetchRevenue() {
   // This is equivalent to in fetch(..., {cache: 'no-store'}).
 
   try {
-    // Artificially delay a reponse for demo purposes.
+    // Artificially delay a response for demo purposes.
     // Don't do this in real life :)
 
     // console.log('Fetching revenue data...');
-    // await new Promise((resolve) => setTimeout(resolve, 3000));
+    // await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const data = await sql<Revenue>`SELECT * FROM revenue`;
 
-    // console.log('Data fetch complete after 3 seconds.');
+    // console.log('Data fetch complete after 2 seconds.');
 
     return data.rows;
   } catch (error) {
@@ -55,8 +56,7 @@ export async function fetchLatestInvoices() {
 export async function fetchCardData() {
   try {
     // You can probably combine these into a single SQL query
-    // However, we are intentionally splitting them to demonstrate
-    // how to initialize multiple queries in parallel with JS.
+    // However, we are intentionally splitting them to demonstrate how to initialize multiple queries in parallel with JS.
     const invoiceCountPromise = sql`SELECT COUNT(*) FROM invoices`;
     const customerCountPromise = sql`SELECT COUNT(*) FROM customers`;
     const invoiceStatusPromise = sql`SELECT
@@ -83,7 +83,7 @@ export async function fetchCardData() {
     };
   } catch (error) {
     console.error('Database Error:', error);
-    throw new Error('Failed to card data.');
+    throw new Error('Failed to fetch card data.');
   }
 }
 
@@ -165,6 +165,7 @@ export async function fetchInvoiceById(id: string) {
     return invoice[0];
   } catch (error) {
     console.error('Database Error:', error);
+    throw new Error('Failed to fetch invoice.');
   }
 }
 
@@ -224,7 +225,7 @@ export async function getUser(email: string) {
     const user = await sql`SELECT * from USERS where email=${email}`;
     return user.rows[0] as User;
   } catch (error) {
-    console.error('Failed to fetch user:', error);
+    console.error('Database Error:', error);
     throw new Error('Failed to fetch user.');
   }
 }
