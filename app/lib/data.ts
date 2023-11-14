@@ -113,6 +113,9 @@ export async function fetchFilteredInvoices(
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
+    console.log('Fetching filtered invoice data...');
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
+
     const invoices = await sql<InvoicesTable>`
       SELECT
         invoices.id,
@@ -133,6 +136,8 @@ export async function fetchFilteredInvoices(
       ORDER BY invoices.date DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
+
+    console.log('Filtered invoice data fetch complete after 1 second.');
 
     return invoices.rows;
   } catch (error) {
