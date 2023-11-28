@@ -5,7 +5,29 @@ import { sql } from '@vercel/postgres';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-const FormSchema = z.object({
+import { signIn } from '@/auth';
+
+//* =============================================
+//*                AUTHENTICATE                 =
+//*==============================================
+export async function authenticate(
+  prevState: string | undefined,
+  formData: FormData,
+) {
+  try {
+    await signIn('credentials', Object.fromEntries(formData));
+  } catch (error) {
+    if ((error as Error).message.includes('CredentialsSignin')) {
+      return 'CredentialsSignin';
+    }
+    throw error;
+  }
+}
+
+//* =============================================
+//*                 INVOICES                    =
+//*==============================================
+const InvoiceSchema = z.object({
   id: z.string(),
   customerId: z.string({
     required_error: 'Please select a customer.',
@@ -24,7 +46,7 @@ const FormSchema = z.object({
 //* =============================================
 //*              CREATE INVOICE                 =
 //*==============================================
-const CreateInvoiceSchema = FormSchema.omit({ id: true, date: true });
+const CreateInvoiceSchema = InvoiceSchema.omit({ id: true, date: true });
 
 export type State = {
   errors?: {
@@ -76,7 +98,7 @@ export async function createInvoice(prevState: State, formData: FormData) {
 //* =============================================
 //*              UPDATE INVOICE                 =
 //*==============================================
-const UpdateInvoiceSchema = FormSchema.omit({ id: true, date: true });
+const UpdateInvoiceSchema = InvoiceSchema.omit({ id: true, date: true });
 
 export async function updateInvoice(id: string, formData: FormData) {
   const { customerId, amount, status } = UpdateInvoiceSchema.parse({
