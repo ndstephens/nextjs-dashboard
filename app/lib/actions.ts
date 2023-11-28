@@ -7,9 +7,17 @@ import { redirect } from 'next/navigation';
 
 const FormSchema = z.object({
   id: z.string(),
-  customerId: z.string(),
-  amount: z.coerce.number(),
-  status: z.enum(['pending', 'paid']),
+  customerId: z.string({
+    required_error: 'Please select a customer.',
+    invalid_type_error: 'Please select a customer.',
+  }),
+  amount: z.coerce
+    .number()
+    .gt(0, { message: 'Please enter an amount greater than $0.' }),
+  status: z.enum(['pending', 'paid'], {
+    required_error: 'Please select an invoice status.',
+    invalid_type_error: 'Please select an invoice status.',
+  }),
   date: z.string(),
 });
 
@@ -18,7 +26,16 @@ const FormSchema = z.object({
 //*==============================================
 const CreateInvoiceSchema = FormSchema.omit({ id: true, date: true });
 
-export async function createInvoice(formData: FormData) {
+export type State = {
+  errors?: {
+    customerId?: string[];
+    amount?: string[];
+    status?: string[];
+  };
+  message?: string | null;
+};
+
+export async function createInvoice(prevState: State, formData: FormData) {
   // const rawFormData = {
   //   customerId: formData.get('customerId'),
   //   amount: formData.get('amount'),
@@ -26,9 +43,18 @@ export async function createInvoice(formData: FormData) {
   // };
   // const rawFormData = Object.fromEntries(formData.entries());
 
-  const { customerId, amount, status } = CreateInvoiceSchema.parse(
+  const validatedFields = CreateInvoiceSchema.safeParse(
     Object.fromEntries(formData.entries()),
   );
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Create Invoice.',
+    };
+  }
+
+  const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
   const date = new Date().toISOString().split('T')[0];
 
